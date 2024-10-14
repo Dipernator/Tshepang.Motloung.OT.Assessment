@@ -28,17 +28,23 @@ namespace OT.Assessment.Service
         {
             _settings = messageQueuingSettings.Value;
 
-            var factory = new ConnectionFactory() { HostName = _settings.HostName };
-            var connection = factory.CreateConnection();
-            _channel = connection.CreateModel();
+            try
+            {
+                var factory = new ConnectionFactory() { HostName = _settings.HostName };
+                var connection = factory.CreateConnection();
+                _channel = connection.CreateModel();
 
-            _channel.QueueDeclare(
-                queue: _settings.CasinoWagerQueue,
-                durable: true,
-                exclusive: false,
-                autoDelete: false,
-                arguments: null
-            );
+                _channel.QueueDeclare(
+                    queue: _settings.CasinoWagerQueue,
+                    durable: true,
+                    exclusive: false,
+                    autoDelete: false,
+                    arguments: null
+                );
+            }
+            catch(Exception) {
+                CreateChannel();
+            }
 
             _playerService = playerService;
         }

@@ -17,6 +17,7 @@ var host = Host.CreateDefaultBuilder(args)
         //configure services
         services.Configure<MessageQueuingSettings>(context.Configuration.GetSection("MessageQueuing"));
         services.AddScoped<IRabbitMQService, RabbitMQService>();
+        services.AddScoped<IPlayerService, PlayerService>();
         services.AddDbContext<ApplicationDbContext>(x => x.UseSqlServer(context.Configuration.GetConnectionString("DatabaseConnection")));
     })
     .Build();

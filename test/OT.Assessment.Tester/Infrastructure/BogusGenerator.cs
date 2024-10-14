@@ -52,6 +52,6 @@ public class BogusGenerator
 
     public List<CasinoWager> Generate()
     {
-        return _testCasinoWagerFaker.Generate(10000);
+        return _testCasinoWagerFaker.Generate(10);
     }
 }
