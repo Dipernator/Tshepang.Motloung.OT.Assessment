@@ -21,6 +21,27 @@ namespace OT.Assessment.Database
             }
         }
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            // Define indexes
+            modelBuilder.Entity<CasinoWager>()
+                .HasIndex(cw => cw.AccountId)
+                .HasDatabaseName("IX_CasinoWager_WagerId");
+
+            modelBuilder.Entity<CasinoWager>()
+               .HasIndex(cw => cw.Provider)
+               .HasDatabaseName("IX_CasinoWager_AccountId");
+
+
+            modelBuilder.Entity<CasinoWager>()
+                .HasIndex(cw => cw.CreatedDateTime)
+                .HasDatabaseName("IX_CasinoWager_CreatedDateTime");
+   
+            modelBuilder.Entity<CasinoWager>()
+             .HasIndex(cw => cw.Provider)
+             .HasDatabaseName("IX_CasinoWager_TransactionId");
+        }
+
         public DbSet<CasinoWager> CasinoWager { get; set; }
     }
 }
