@@ -10,36 +10,37 @@ using OT.Assessment.Models;
 using OT.Assessment.Service.Interface;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using RabbitMQ.Client.Exceptions;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace OT.Assessment.Service
 {
     public class RabbitMQService : IRabbitMQService, IDisposable
     {
-        private readonly IConnection _connection;
-        private readonly IModel _channel;
-        private readonly ApplicationDbContext _dataBaseContext;
-
+        private IConnection _connection;
+        private IModel _channel;
+        private readonly IPlayerService _playerService;
+        private readonly MessageQueuingSettings _settings;
         /// <summary>
         /// 
         /// </summary>
-        public RabbitMQService(IOptions<MessageQueuingSettings> messageQueuingSettings, ApplicationDbContext dataBaseContext)
+        public RabbitMQService(IOptions<MessageQueuingSettings> messageQueuingSettings, IPlayerService playerService)
         {
-            var settings = messageQueuingSettings.Value;
+            _settings = messageQueuingSettings.Value;
 
-            var factory = new ConnectionFactory() { HostName = settings.HostName };
+            var factory = new ConnectionFactory() { HostName = _settings.HostName };
             var connection = factory.CreateConnection();
             _channel = connection.CreateModel();
 
             _channel.QueueDeclare(
-                queue: settings.CasinoWagerQueue,
+                queue: _settings.CasinoWagerQueue,
                 durable: true,
                 exclusive: false,
                 autoDelete: false,
                 arguments: null
             );
 
-            _dataBaseContext = dataBaseContext;
+            _playerService = playerService;
         }
 
         /// <summary>
@@ -51,18 +52,55 @@ namespace OT.Assessment.Service
         {
             try
             {
-                await Task.Run(() =>
+                if (_channel.IsClosed)
                 {
-                    var message = JsonConvert.SerializeObject(casinoWager);
-                    var body = Encoding.UTF8.GetBytes(message);
-                    _channel.BasicPublish(exchange: "", routingKey: "CasinoWagerQueue", basicProperties: null, body: body);
-                    Console.WriteLine($" [x] Sent {message}");
-                });
+                    // Optionally, re-establish the connection and channel here
+                    _channel = CreateChannel(); // Implement a method to create a new channel
+                }
+
+                var message = JsonConvert.SerializeObject(casinoWager);
+                var body = Encoding.UTF8.GetBytes(message);
+
+                // Publish the message
+                _channel.BasicPublish(exchange: "", routingKey: _settings.CasinoWagerQueue, basicProperties: null, body: body);
+                Console.WriteLine($" [x] Sent {message}");
+            }
+            catch (AlreadyClosedException ex)
+            {
+                Console.WriteLine($"Connection already closed: {ex.Message}");
+                // Handle reconnection logic here if needed
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error: {ex.Message}");
             }
+        }
+
+        // Example method to create a new channel
+        private IModel CreateChannel()
+        {
+            if (_connection == null || !_connection.IsOpen)
+            {
+                _connection = CreateConnection(); // Implement this to create a new connection
+            }
+            return _connection.CreateModel(); // Create a new channel
+        }
+
+        private IConnection? CreateConnection()
+        {
+            var factory = new ConnectionFactory() { HostName = _settings.HostName };
+            var connection = factory.CreateConnection();
+            _channel = connection.CreateModel();
+
+            _channel.QueueDeclare(
+                queue: _settings.CasinoWagerQueue,
+                durable: true,
+                exclusive: false,
+                autoDelete: false,
+                arguments: null
+            );
+
+            return connection;
         }
 
         /// <summary>
@@ -89,7 +127,7 @@ namespace OT.Assessment.Service
                         return;
                     }
 
-                    bool isDuplicate = await IsDuplicate(casinoWager.WagerId);
+                    bool isDuplicate = await _playerService.IsDuplicate(casinoWager.WagerId);
                     if (isDuplicate)
                     {
                         // Handle duplicate 
@@ -97,7 +135,7 @@ namespace OT.Assessment.Service
                         return;
                     }
 
-                    var saveResult = await SaveCasinoWagerAsync(casinoWager);
+                    var saveResult = await _playerService.SaveCasinoWagerAsync(casinoWager);
                     if (!saveResult)
                     {
                         // Handle not saved
@@ -110,7 +148,7 @@ namespace OT.Assessment.Service
                 };
 
                 // Start consuming messages
-                _channel.BasicConsume(queue: "CasinoWagerQueue",
+                _channel.BasicConsume(queue: _settings.CasinoWagerQueue,
                                        autoAck: false, 
                                        consumer: wagerConsumer);
             }
@@ -119,37 +157,7 @@ namespace OT.Assessment.Service
                 Console.WriteLine($"Error: {ex.Message}");
             }
         }
-
-        /// <summary>
-        /// Save casino wager
-        /// </summary>
-        /// <param name="casinoWager"></param>
-        /// <returns></returns>
-        public async Task<bool> SaveCasinoWagerAsync(CasinoWager casinoWager) {
-            try {
-                _dataBaseContext.CasinoWager.AddAsync(casinoWager);
-                if (_dataBaseContext.SaveChanges() > 0) {
-                    return true;
-                }
-
-                return false;
-            }
-            catch(Exception ex)
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Check for Duplicate using wagerId
-        /// </summary>
-        /// <param name="wagerId"></param>
-        /// <returns></returns>
-        public async Task<bool> IsDuplicate(Guid wagerId)
-        {
-            return _dataBaseContext.CasinoWager
-                .Any(w => w.WagerId == wagerId);
-        }
+ 
 
         public void Dispose()
         {

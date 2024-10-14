@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using OT.Assessment.Database;
+using OT.Assessment.Models;
 using OT.Assessment.Models.Response;
 using OT.Assessment.Service.Interface;
 using System;
@@ -19,7 +20,6 @@ namespace OT.Assessment.Service
         {
             _dataBaseContext = dataBaseContext;
         }
-
 
         /// <summary>
         /// Get player casino wagers
@@ -93,6 +93,40 @@ namespace OT.Assessment.Service
             {
                 throw;
             }
+        }
+
+        /// <summary>
+        /// Save casino wager
+        /// </summary>
+        /// <param name="casinoWager"></param>
+        /// <returns></returns>
+        public async Task<bool> SaveCasinoWagerAsync(CasinoWager casinoWager)
+        {
+            try
+            {
+                _dataBaseContext.CasinoWager.AddAsync(casinoWager);
+                if (_dataBaseContext.SaveChanges() > 0)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Check for Duplicate using wagerId
+        /// </summary>
+        /// <param name="wagerId"></param>
+        /// <returns></returns>
+        public async Task<bool> IsDuplicate(Guid wagerId)
+        {
+            return _dataBaseContext.CasinoWager
+                .Any(w => w.WagerId == wagerId);
         }
     }
 }

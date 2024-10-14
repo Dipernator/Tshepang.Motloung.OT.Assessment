@@ -1,4 +1,5 @@
-﻿using OT.Assessment.Models.Response;
+﻿using OT.Assessment.Models;
+using OT.Assessment.Models.Response;
 
 namespace OT.Assessment.Service.Interface
 {
@@ -7,5 +8,9 @@ namespace OT.Assessment.Service.Interface
         Task<List<TopSpenderResponse>> GetTopSpenders(int count);
 
         Task<PlayerWadgerResponse> GetPlayerCasinoWagers(Guid playerId, int pageSize = 10, int page = 1);
+
+        Task<bool> SaveCasinoWagerAsync(CasinoWager casinoWager);
+
+        Task<bool> IsDuplicate(Guid wagerId);
     }
 }
