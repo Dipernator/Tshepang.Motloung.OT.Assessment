@@ -6,6 +6,6 @@ namespace OT.Assessment.Service.Interface
     {
         Task<List<TopSpenderResponse>> GetTopSpenders(int count);
 
-        Task<List<PlayerWadgerResponse>> GetPlayerCasinoWagers(Guid playerId, int pageSize = 10, int page = 1);
+        Task<PlayerWadgerResponse> GetPlayerCasinoWagers(Guid playerId, int pageSize = 10, int page = 1);
     }
 }

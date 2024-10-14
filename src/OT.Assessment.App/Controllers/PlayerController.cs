@@ -32,11 +32,16 @@ namespace OT.Assessment.App.Controllers
         //GET api/player/{playerId}/wagers
         [HttpGet]
         [Route("{playerId}/wagers")]
-        public async Task<IActionResult> GetPlayerWagers(Guid playerId)
+        public async Task<IActionResult> GetPlayerWagers(Guid playerId, int pageSize, int page)
         {
-            var playerWagers = await _playerService.GetPlayerCasinoWagers(playerId);
+            if(pageSize == 0)
+                pageSize = 10;
+            if(page == 0)
+                page = 1;
 
-            if (playerWagers == null || !playerWagers.Any())
+            var playerWagers = await _playerService.GetPlayerCasinoWagers(playerId, pageSize, page);
+
+            if (playerWagers == null)
             {
                 return NotFound($"Wagers for {playerId} is not found");
             }

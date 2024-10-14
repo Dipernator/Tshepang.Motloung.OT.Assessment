@@ -9,19 +9,19 @@ namespace OT.Assessment.Models.Response
 {
     public class PlayerWadgerResponse
     {
-        [JsonPropertyName("wagerId")]
-        public Guid WagerId { get; set; }
+        [JsonPropertyName("playerWadgers")]
+        public List<PlayerWadger> PlayerWadgers { get; set; }
 
-        [JsonPropertyName("game")]
-        public string Game { get; set; }
+        [JsonPropertyName("page")]
+        public int Page { get; set; }
 
-        [JsonPropertyName("provider")]
-        public string Provider { get; set; }
+        [JsonPropertyName("pageSize")]
+        public int PageSize { get; set; }
 
-        [JsonPropertyName("amount")]
-        public double Amount { get; set; }
+        [JsonPropertyName("total")]
+        public int Total { get; set; }
 
-        [JsonPropertyName("createdDate")]
-        public DateTime CreatedDate { get; set; }
+        [JsonPropertyName("totalPages")]
+        public int TotalPages { get; set; }
     }
 }

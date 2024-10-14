@@ -20,24 +20,47 @@ namespace OT.Assessment.Service
             _dataBaseContext = dataBaseContext;
         }
 
-        public async Task<List<PlayerWadgerResponse>> GetPlayerCasinoWagers(Guid playerId, int pageSize = 10, int page = 1)
+
+        /// <summary>
+        /// Get player casino wagers
+        /// </summary>
+        /// <param name="playerId"></param>
+        /// <param name="pageSize"></param>
+        /// <param name="page"></param>
+        /// <returns></returns>
+        public async Task<PlayerWadgerResponse> GetPlayerCasinoWagers(Guid playerId, int pageSize = 10, int page = 1)
         {
             try
             {
-                // Get players casino wagers
+                // Get players casino wagers paginated list
                 var playerWagers = _dataBaseContext.CasinoWager
-                     .Where(m => m.AccountId == playerId)
-                     .ToList();
-                
-                var response = playerWagers.
-                    Select(item => new PlayerWadgerResponse
+                   .Where(m => m.AccountId == playerId)
+                   .OrderByDescending(m => m.CreatedDateTime)
+                   .Skip((page - 1) * pageSize)
+                   .Take(pageSize)
+                   .ToList();
+
+                // Count players casino wagers
+                var totalWagers = _dataBaseContext.CasinoWager
+                    .Count(m => m.AccountId == playerId);
+
+                var totalPages = (int)Math.Ceiling((double)totalWagers / pageSize);
+
+                var response = new PlayerWadgerResponse
+                {
+                    Page = page,
+                    PageSize = pageSize,
+                    Total = totalWagers,
+                    TotalPages = totalPages,
+                    PlayerWadgers = playerWagers.Select(pw => new PlayerWadger
                     {
-                        Amount = item.Amount,
-                        CreatedDate = item.CreatedDateTime,
-                        Game = item.GameName,
-                        Provider = item.Provider,
-                        WagerId = item.WagerId
-                    }).ToList();
+                        Amount = pw.Amount,
+                        CreatedDate = pw.CreatedDateTime,
+                        Game = pw.GameName,
+                        Provider = pw.Provider,
+                        WagerId = pw.WagerId
+                    }).ToList()
+                };
 
                 return response;
             }
