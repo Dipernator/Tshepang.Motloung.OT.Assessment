@@ -1,18 +1,12 @@
-﻿using Microsoft.Extensions.Logging;
-using OT.Assessment.Database;
+﻿using OT.Assessment.Database;
 using OT.Assessment.Models;
 using OT.Assessment.Models.Response;
 using OT.Assessment.Service.Interface;
-using System;
-using System.Collections.Generic;
 using System.Data.Entity;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OT.Assessment.Service
 {
-    public class PlayerService : IPlayerService
+    public class PlayerService : IPlayerService, IDisposable
     {
         private readonly ApplicationDbContext _dataBaseContext;
 
@@ -70,6 +64,11 @@ namespace OT.Assessment.Service
             }
         }
 
+        /// <summary>
+        /// Get top spenders
+        /// </summary>
+        /// <param name="count"></param>
+        /// <returns></returns>
         public async Task<List<TopSpenderResponse>> GetTopSpenders(int count)
         {
             try
@@ -127,6 +126,11 @@ namespace OT.Assessment.Service
         {
             return _dataBaseContext.CasinoWager
                 .Any(w => w.WagerId == wagerId);
+        }
+
+        public void Dispose()
+        {
+            _dataBaseContext?.Dispose();
         }
     }
 }

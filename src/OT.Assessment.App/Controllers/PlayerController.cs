@@ -1,7 +1,5 @@
-﻿using Azure;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using OT.Assessment.Models;
-using OT.Assessment.Service;
 using OT.Assessment.Service.Interface;
 
 namespace OT.Assessment.App.Controllers

@@ -69,12 +69,11 @@ namespace OT.Assessment.Service
 
                 // Publish the message
                 _channel.BasicPublish(exchange: "", routingKey: _settings.CasinoWagerQueue, basicProperties: null, body: body);
-                Console.WriteLine($" [x] Sent {message}");
+                Console.WriteLine($"Sent {message}");
             }
             catch (AlreadyClosedException ex)
             {
-                Console.WriteLine($"Connection already closed: {ex.Message}");
-                // Handle reconnection logic here if needed
+                Console.WriteLine($"Error: Connection already closed: {ex.Message}");
             }
             catch (Exception ex)
             {
@@ -163,7 +162,7 @@ namespace OT.Assessment.Service
                 Console.WriteLine($"Error: {ex.Message}");
             }
         }
- 
+        
 
         public void Dispose()
         {
